@@ -1,0 +1,37 @@
+{
+  "name": "ted-spider",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "bin": {
+    "ted-spider": "index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "postbuild": "node ./scripts/pluckPackageJson.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/fs-extra": "^8.0.1",
+    "@types/puppeteer": "^1.20.2",
+    "ts-node": "^8.4.1",
+    "typescript": "^3.6.4"
+  },
+  "dependencies": {
+    "@types/axios": "^0.14.0",
+    "@types/cheerio": "^0.22.13",
+    "@types/inquirer": "^6.5.0",
+    "@types/log-symbols": "^3.0.0",
+    "@types/node": "^12.12.5",
+    "@types/ora": "^3.2.0",
+    "axios": "^0.19.0",
+    "chalk": "^2.4.2",
+    "cheerio": "^1.0.0-rc.3",
+    "fs-extra": "^8.1.0",
+    "inquirer": "^7.0.0",
+    "log-symbols": "^3.0.0",
+    "ora": "^4.0.2",
+    "puppeteer": "^2.0.0"
+  }
+}
