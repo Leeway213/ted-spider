@@ -30,7 +30,7 @@ export class History {
   }
 
   hasHistory(url: string, lan: string) {
-    return this.history[lan].includes(url);
+    return (this.history[lan] || []).includes(url);
   }
 
   getLanguage(lan: string) {

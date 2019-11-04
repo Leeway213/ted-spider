@@ -68,6 +68,7 @@ export abstract class TaskQueue<T> extends TaskBase {
               // TODO: 报告任务执行结果
               this.emit('complete', this);
 
+
               // 继续发布循环
               this.publish();
             },
