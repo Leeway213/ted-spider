@@ -22,7 +22,9 @@ import { breakSentence } from './utils/sentences-break';
     } else {
       const src = fs.readFileSync(root, { encoding: 'utf-8' });
       const dst = breakSentence(src);
-      fs.writeFileSync(`${root.replace('.txt', '-new.txt')}`, dst, { encoding: 'utf-8' });
+      let lines = dst.split('\n');
+      lines = lines.filter(v => v.split(' ').length >= 10 && v.split(' ').length <= 20);
+      fs.writeFileSync(`${root.replace('.txt', '-new.txt')}`, lines.join('\n'), { encoding: 'utf-8' });
     }
   };
   traverse(rootDir);
