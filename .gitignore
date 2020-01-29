@@ -6,3 +6,4 @@ node_modules/
 .DS_Store
 package-log.json
 result/
+browser_data/

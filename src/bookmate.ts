@@ -1,6 +1,9 @@
 import puppeteer, { Page, Response, Browser, ElementHandle } from 'puppeteer';
 import fs from 'fs-extra';
+import path from 'path';
 import { breakSentence } from './utils/sentences-break';
+
+const CHROME_DATA_DIR = path.resolve(__dirname, './browser_data');
 
 const INFO_BASE_URL = 'https://bookmate.com/books/';
 const READER_BASE_URL = 'https://reader.bookmate.com/';
@@ -82,7 +85,9 @@ async function clickElement(page: Page, ele: ElementHandle<Element>) {
 
 async function login() {
   browser = await puppeteer.launch({
-    headless: false
+    headless: false,
+    userDataDir: CHROME_DATA_DIR,
+    // executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
   });
 
   const pages = await browser.pages();
@@ -97,7 +102,15 @@ async function login() {
   let res: Response | null;
   do {
     res = await page.goto(infoUrl);
+    if (res && res.status() === 404) {
+      process.exit();
+    }
   } while (!res || !res.ok());
+
+  const header = await page.$('.header__avatar');
+  if (header) {
+    return;
+  }
 
   const loginBtn = await page.$('#login-button');
   if (loginBtn) {
@@ -127,6 +140,8 @@ async function login() {
         await clickElement(page, submit);
       }
     }
+  } else {
+    process.exit();
   }
 
   await getElement(page, '.header__avatar');
@@ -143,30 +158,39 @@ async function loadReader() {
     while ((await page.$('.reader.reader_loading')) !== null) {
       await sleep(100);
     }
-    const width = page.viewport().width;
-    const height = page.viewport().height;
-    await page.mouse.move(width / 2, height / 2, { steps: 20 });
-    await page.mouse.down();
-    await sleep(100);
-    await page.mouse.up();
 
-    const header = await getElement(page, '.header.header_active');
-    if (header) {
-      const btns = await header.$$('.icon-button');
-      if (btns[0]) {
-        await clickElement(page, btns[0]);
-        const list = await getElement(page, '.table-of-contents__chapters');
-        if (list) {
-          const first = await getElement(list, '.table-of-contents__chapter');
-          if (first) {
-            await page.evaluate((ele) => {
-              ele.scrollIntoViewIfNeeded({ behavior: "smooth", block: "end", inline: "nearest" });
-            }, first);
-            await clickElement(page, first);
-          }
-        }
-      }
-    }
+    // const head = await page.$('.header');
+    // await clickElement(page, head!);
+    // const width = page.viewport().width;
+    // const height = page.viewport().height;
+    // await page.mouse.move(width / 2, 10, { steps: 20 });
+    // await page.mouse.down();
+    // await sleep(100);
+    // await page.mouse.up();
+
+    // const header = await getElement(page, '.header.header_active');
+    // if (header) {
+    //   const btns = await header.$$('.icon-button');
+    //   if (btns[0]) {
+    //     let list = null;
+    //     while (!list) {
+    //       await sleep(100);
+    //       await clickElement(page, btns[0]);
+    //       list = await page.$('.table-of-contents__chapters');
+    //     }
+    //     // await clickElement(page, btns[0]);
+    //     // const list = await getElement(page, '.table-of-contents__chapters');
+    //     if (list) {
+    //       const first = await getElement(list, '.table-of-contents__chapter');
+    //       if (first) {
+    //         await page.evaluate((ele) => {
+    //           ele.scrollIntoViewIfNeeded({ behavior: "smooth", block: "end", inline: "nearest" });
+    //         }, first);
+    //         await clickElement(page, first);
+    //       }
+    //     }
+    //   }
+    // }
     return page;
   }
 }
@@ -191,7 +215,7 @@ async function readPage(page: Page) {
       }
     }
   }
-  result = breakSentence(result.split('\n').filter(v => Boolean(v)).map(v => {console.log(v); console.log('****************'); return v;}).join('\n'));
+  result = breakSentence(result.split('\n').filter(v => Boolean(v)).map(v => { console.log(v); console.log('****************'); return v; }).join('\n'));
   return result;
 }
 
