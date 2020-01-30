@@ -1,7 +1,7 @@
 import puppeteer, { Page, Response, Browser, ElementHandle } from 'puppeteer';
 import fs from 'fs-extra';
 import path from 'path';
-import { breakSentence } from './utils/sentences-break';
+import { breakSentence } from '../utils/sentences-break';
 
 const CHROME_DATA_DIR = path.resolve(__dirname, './browser_data');
 
