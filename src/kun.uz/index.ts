@@ -5,6 +5,8 @@ import { KunTaskQueue, KunTask } from './SpiderTask';
 import { History } from '../history';
 import { breakSentence } from '../utils/sentences-break';
 import fs from 'fs-extra';
+import { defer } from 'rxjs';
+import { tap, retryWhen, delay, take, map, filter } from 'rxjs/operators';
 
 const LAN = 'uz';
 
@@ -16,12 +18,14 @@ const RESULT_DIR = './kun_uz_result';
 
 const appId = Date.now();
 
-const queue = new KunTaskQueue();
+const queue = new KunTaskQueue(20);
 
 const history = new History(RESULT_DIR);
 
 const cancelToken = axios.CancelToken.source();
+let aborted = false;
 function exit() {
+  aborted = true;
   cancelToken.cancel();
   queue.clear();
   queue.runningTasks.forEach(v => v.abort());
@@ -55,28 +59,32 @@ function parse(html: string) {
 }
 
 function saveToFile(text: string) {
-  text = breakSentence(text);
+  // text = breakSentence(text);
   const filename = `${RESULT_DIR}/${appId}.txt`;
-  if(!fs.existsSync(filename)) {
+  if (!fs.existsSync(filename)) {
     fs.createFileSync(filename);
   }
   fs.appendFileSync(filename, text, { encoding: 'utf-8' });
 }
 
 async function run(url: string) {
-  const doc = await axios.get(url, {
-    responseType: 'text',
-    cancelToken: cancelToken.token
-  });
+  const doc = await defer(() => axios.get(url, { cancelToken: cancelToken.token, timeout: 20000 })).pipe(
+    filter(() => !aborted),
+    retryWhen(errors => errors.pipe(tap(() => console.log('retry: ' + url)), delay(1000), take(50)))
+  ).toPromise()
   let result = parse(doc.data);
   while (result.urls.length > 0) {
     const url = result.urls.shift()!;
     if (!history.hasHistory(url, LAN)) {
       console.log('subscribe ' + url);
+      console.log('队列总数: ' + queue.commonQueue.length);
+      console.log('正在运行: ' + queue.runningTasks.length);
       const task = new KunTask(url);
       task.on('finish', (article: string) => {
-        console.log('finish ' + url);
         saveToFile(article);
+        console.log('finish ' + url);
+        console.log('队列总数: ' + queue.commonQueue.length);
+        console.log('正在运行: ' + queue.runningTasks.length);
         history.push(LAN, task.url);
       });
       queue.subscribe(task);

@@ -34,6 +34,7 @@
     "log-symbols": "^3.0.0",
     "moment": "^2.24.0",
     "ora": "^4.0.2",
-    "puppeteer": "^2.0.0"
+    "puppeteer": "^2.0.0",
+    "rxjs": "^6.5.4"
   }
 }
